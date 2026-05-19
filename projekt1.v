@@ -51,5 +51,42 @@ Definition lim (an : seriesGeo) (g : R) :=
       (n>=n0)%nat -> (* że dla każdego n większego od tego n0 zachodzi*)
         Rabs (eval_seriesGeo an n -g)<e. 
 
+Definition log2 (x : R) : R :=
+  ln x / ln 2.
+
+
+(*twierdzenie pomocnicze że 1 do dowolnej natrualnej potęgi to 1*)
+Lemma powCons :forall n:nat, pow 1 n=1.
+Proof.
+  intros.
+  induction n.
+  simpl.
+  reflexivity.
+  simpl.
+  rewrite IHn.
+  simpl.
+  ring. (*służy do automatycznego upraszczania i udowadniania równości 
+    algebraicznych w strukturach typu pierścień
+    tutaj się przydaje bo mamy liczbę rzeczywistą do potęgi naturalnej*)
+Qed.
+(*dowód tego że granicą ciągu stałego złożonego z samych 1 jest 1*)
+Theorem easyLim : lim (geo 1 1) 1.
+Proof.
+  unfold lim. (*rozpakowanie definicji granicy*)
+  intros e He. (*dodanie do założeń że e>0*)
+  exists 1%nat. (*wzięcie 1 jako dowolne n0 *)
+  intros n Hn. (*dodanie do założenia że n> 1*)
+  unfold eval_seriesGeo. (*rozpakowanie definicji liczenia wartości ciągu*)
+  simpl. 
+  rewrite powCons. (*użycie twierdzenia do potęg liczby 1*)
+  simpl.
+  rewrite Rminus_diag_eq. (*używam twierdzenia że x-x=0 i rozbiło mi to na
+        2 warunki, że Rabs 0 < e i 1*1=1 by wewnątrz Rabs`a było 0*)
+  rewrite Rabs_R0. (*użycie twierdzenia że moduł z 0 to 0*)
+  trivial.
+  ring. (*analogicznie jak w lemacie użycie taktyki ring by pokazać że 1*1=1 *)
+Qed.
+
+
 
 
