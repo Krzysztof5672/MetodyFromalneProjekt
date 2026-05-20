@@ -87,6 +87,116 @@ Proof.
   ring. (*analogicznie jak w lemacie użycie taktyki ring by pokazać że 1*1=1 *)
 Qed.
 
+Print Rabs_pos_lt.
+Require Import Lra.
+(*lemat dot. tego że wartość bezwglena jest wieksza od zera jesli a i b są różne*)
+Lemma diffNotZero : forall (a b : R), a<>b -> Rabs (a - b) >0.
+Proof.
+   intros.
+   unfold Rabs.
+   destruct (Rcase_abs (a - b)) as [Hlt | Hge].
+   lra.
+   lra.
+ Qed.
+ (*twierdzenie dot. nierownosci trojka*)
+Theorem absTriang : forall (a b : R), Rabs (a + b) <= Rabs a + Rabs b.
+Proof.
+  intros.
+  unfold Rabs.
+  destruct (Rcase_abs (a + b)) as [Hab | Hab].
+  destruct (Rcase_abs a) as [Ha | Ha].
+  destruct (Rcase_abs b) as [Hb | Hb].
+  lra.
+  lra.
+  destruct (Rcase_abs b) as [Hb | Hb].
+  lra.
+  lra.
+  destruct (Rcase_abs a) as [Ha | Ha].
+  destruct (Rcase_abs b) as [Hb | Hb].
+  lra.
+  lra.
+  destruct (Rcase_abs b) as [Hb | Hb].
+  lra.
+  lra.
+Qed.
 
+(*Lemat dot. symetrii wartości bezwględenej*)
+Lemma symRabs : forall (a b : R), Rabs (a - b)=Rabs(b - a).
+Proof.
+  intros.
+  unfold Rabs.
+  destruct (Rcase_abs (a-b)) as [Hab | Hab].
+  destruct (Rcase_abs (b-a)) as [Hba | Hba].
+  lra.
+  lra.
+  destruct (Rcase_abs (b-a)) as [Hba | Hba].
+  lra.
+  lra.
+Qed.
+(*Twierdzenie dot. jednoznaczności granicy ciągu*)
 
-
+Theorem oneLim : forall (an : seriesGeo) (g1 g2 : R),
+   lim an g1 /\ lim an g2 -> g1=g2.
+Proof. (*plan dowodu, tezę rozbijamy na dwa czyli albo g1=g2 albo są różne
+  pierwszy przypadek trywialny, w drugim trzeba pokazać sprzeczność*)
+  intros.
+  destruct H.
+  destruct (Req_dec g1 g2) as [Heq | Hneq].  (*wytlumaczyć co to robi*)
+  rewrite Heq.
+  trivial.
+  exfalso.
+  set (e := Rabs (g1-g2)/2).
+  assert (He : e>0).
+  {  
+    unfold e.
+    apply Rdiv_lt_0_compat. (*twierdzenie że jeśli coś w nawiasie jest niezerowe
+       to podzielone przez dowolna liczbę nadal jest niezerowe*)
+    apply diffNotZero.
+    apply Hneq.
+    lra.
+  }
+  specialize (H e He).
+  destruct H as [N HN].
+  specialize (H0 e He).
+  destruct H0 as [N0 HN0]. 
+  set (N_max := max N N0).
+  assert (HNg1 :  Rabs (eval_seriesGeo an N_max - g1) < e).
+  {
+    apply HN.
+    unfold N_max.
+    lia.
+  }
+  assert (HNg2 :  Rabs (eval_seriesGeo an N_max - g2) < e).
+  {
+    apply HN0.
+    unfold N_max.
+    lia.
+  }
+  assert (Htriangle : Rabs (g1 - g2) <= 
+            Rabs (g1 - eval_seriesGeo an N_max)
+            + Rabs (eval_seriesGeo an N_max - g2)).
+  {
+    replace (g1 - g2)
+      with
+        ((g1 - eval_seriesGeo an N_max)
+        +
+        (eval_seriesGeo an N_max - g2))
+        by ring.
+    apply absTriang .
+  }
+  assert (Hsum : Rabs (g1 - eval_seriesGeo an N_max ) + 
+              Rabs (eval_seriesGeo an N_max - g2)
+              < e + e).
+  {
+    rewrite symRabs.
+    lra.
+  }
+  
+  assert (Hfinal : Rabs (g1-g2) <e+e).
+  {
+    lra.
+  }
+  unfold e in Hfinal.
+  lra.
+Qed.
+  
