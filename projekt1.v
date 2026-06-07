@@ -43,6 +43,7 @@ Eval simpl in  eval_seriesGeo (geo 0 5) 5.
 Eval simpl in  eval_seriesGeo (geo 2 0.25) 3.
 Print Rabs. (* sprawdzam jak wyglada funkcja Rabs - wartość bezwzględna dla R*)
 (*definiuje granice ciągu*)  
+
 Definition lim (an : seriesGeo) (g : R) := 
   forall (e : R), 
       e>0 -> (*dla każdego e z R większego od 0 zachodzi *)
@@ -50,6 +51,11 @@ Definition lim (an : seriesGeo) (g : R) :=
       forall (n : nat), 
       (n>=n0)%nat -> (* że dla każdego n większego od tego n0 zachodzi*)
         Rabs (eval_seriesGeo an n -g)<e. 
+
+(*definicja istnienia granicy*)
+Definition limExists (an : seriesGeo) :=
+  exists g : R, lim an g. 
+
 
 Definition log2 (x : R) : R :=
   ln x / ln 2.
@@ -199,4 +205,153 @@ Proof. (*plan dowodu, tezę rozbijamy na dwa czyli albo g1=g2 albo są różne
   unfold e in Hfinal.
   lra.
 Qed.
+(*lemat pomocniczy ze 2^n>=1*)
+Lemma pow2_pos :
+  forall n : nat,
+  (1 <= Nat.pow 2 n)%nat.
+Proof.
+  induction n.
+  simpl. 
+  lia.
+  simpl. 
+  lia.
+Qed.
+(*lemat że n<=2^n*)
+Lemma pow2GeN :
+  forall n : nat,
+  (n <= Nat.pow 2 n)%nat.
+Proof.
+  induction n.
+  simpl.
+  lia.
+  simpl.
+    assert (H1 : (1 <= Nat.pow 2 n)%nat).
+    { apply pow2_pos. }
+
+    (* z IHn mamy n <= 2^n *)
+    lia.
+Qed.
+ 
+Require Import ZArith.
+Require Import Coq.Reals.Rdefinitions.
+Search up.
+(*lemat że sufit z x rzeczywistego jest wiekszy od x*)
+Lemma up_ub :
+  forall x:R, IZR (up x) >= x.
+Proof.
+  intros x.
+  destruct (archimed x) as [H1 _].
+  lra.
+Qed.
+
+Require Import Reals ZArith Lra Lia.
+Open Scope R_scope.
+
+(*lemat dot. tego że jeśli x>0 to sufit z x jest większy od 0*)
+Lemma up_nonneg :
+  forall x:R, x > 0 -> (0 <= up x)%Z.
+Proof.
+  intros x Hx.
+
+  destruct (archimed x) as [H1 _].
+  (* H1 : IZR (up x) > x *)
+
+  assert (HposR : IZR (up x) > 0).
+  {
+    lra.
+  }
+
+  (* 0 = IZR 0 *)
+  assert (H0 : IZR 0 < IZR (up x)).
+  {
+    apply Rgt_lt in HposR.
+    lra.
+  }
+ 
+  apply lt_IZR  in H0.
+  (* H0 : (0 < up x)%Z *)
+
+  lia.
+Qed.
+
+(*lemat że sufit z x jest większy lub równy x*)
+Lemma up_x_ege_x:
+  forall x:R,x>0-> IZR (up x)>=x. 
+ (*wczesniejsza wersja INR(Z.to_nat(up(x)))>=x.*) 
+Proof.
+  intros x Hx.
+  apply up_ub.
+Qed.
+
+Lemma up_ub_upgrade :
+  forall x:R, x>0 ->
+    INR (Z.to_nat (up x)) >= x.
+Proof.
+  intros x Hx.
+
+  destruct (archimed x) as [Hup _].
+
+
+  rewrite INR_IZR_INZ.
+
+  rewrite Z2Nat.id.
+  apply up_ub.
+  apply up_nonneg.
+  lra.
   
+Qed.
+Require Import Psatz.  
+
+Require Import Reals ZArith Lia Lra.
+
+
+
+
+Lemma pow_half_small :
+  forall e:R, e > 0->
+  exists n,
+    (1/2)^n < e.
+Proof.
+  intros e He.
+  destruct (archimed (/e)) as [Hgt Hsmall].
+  set (m := up (/ e)).
+  exists (S( Z.to_nat m)).
+  (*przeniesienia twierdzenia n<=2^n na liczby rzeczywiste*)
+  assert (Hpow :
+    INR (S (Z.to_nat m))
+      <= INR (Nat.pow 2 (S (Z.to_nat m)))).
+  {
+    apply le_INR.
+    apply pow2GeN.
+  }
+  assert (Hm :
+  INR (S (Z.to_nat m)) > / e).
+  {
+    unfold m.
+    destruct (archimed (/e)) as [H _].
+    apply Rlt_le_trans with (r2 := IZR (up (/e))).
+    exact H.
+    lra.
+  }
+  assert (H2: 
+    INR (Nat.pow 2 (S (Z.to_nat m)))>/e ).
+   {
+    eapply Rlt_le_trans.
+    exact Hgt.
+    replace (up(/e) with m.
+    lra.
+    exact Hpow.
+   }
+
+
+
+(*Przykład ze granica 1/n to 0*)
+Require Import ZArith.
+Theorem easyGeoToZero : lim (geo 1 0.5) 0. 
+Proof.
+  unfold lim.
+  intros e He.
+  exists (Z.to_nat(up(log2 (1/e)))).
+  simpl.
+
+
