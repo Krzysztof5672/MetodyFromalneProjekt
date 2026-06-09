@@ -57,9 +57,6 @@ Definition limExists (an : seriesGeo) :=
   exists g : R, lim an g. 
 
 
-Definition log2 (x : R) : R :=
-  ln x / ln 2.
-
 
 (*twierdzenie pomocnicze że 1 do dowolnej natrualnej potęgi to 1*)
 Lemma powCons :forall n:nat, pow 1 n=1.
@@ -205,195 +202,42 @@ Proof. (*plan dowodu, tezę rozbijamy na dwa czyli albo g1=g2 albo są różne
   unfold e in Hfinal.
   lra.
 Qed.
-(*lemat pomocniczy ze 2^n>=1*)
-Lemma pow2_pos :
-  forall n : nat,
-  (1 <= Nat.pow 2 n)%nat.
+
+
+
+(*dowod ze szereg 1/2^n zbiega do 0*)
+Theorem easyGeoToZero : lim (geo 1 0.5) 0.
 Proof.
-  induction n.
-  simpl. 
-  lia.
-  simpl. 
-  lia.
-Qed.
-(*lemat że n<=2^n*)
-Lemma pow2GeN :
-  forall n : nat,
-  (n <= Nat.pow 2 n)%nat.
-Proof.
-  induction n.
-  simpl.
-  lia.
-  simpl.
-    assert (H1 : (1 <= Nat.pow 2 n)%nat).
-    { apply pow2_pos. }
-
-    (* z IHn mamy n <= 2^n *)
-    lia.
-Qed.
- 
-Require Import ZArith.
-Require Import Coq.Reals.Rdefinitions.
-Search up.
-(*lemat że sufit z x rzeczywistego jest wiekszy od x*)
-
-
-Lemma up_ub :
-  forall x:R, x > 0 ->
-    INR (Z.to_nat (up x)) >= x.
-Proof.
-  intros x Hx.
-
-  destruct (archimed x) as [Hup _].
-
-  (* Hup : IZR (up x) > x *)
-
-  assert (Hpos : (0 <= up x)%Z).
-  {
-    apply Z.lt_le_incl.
-    apply lt_IZR.
-    lra.
-  }
-
-  rewrite INR_IZR_INZ.
-  rewrite Z2Nat.id by exact Hpos.
-  lra.
-Qed.
-
-(*Lemma up_ub :
-  forall x:R,x>0 -> INR(Z.to_nat(up(x)))>=x .
-Proof.
- (* intros x.
-  destruct (archimed x) as [H1 _].
-  lra.*)
-  intros x Hx.
-
-  destruct (archimed x) as [Hup _].
-  assert (Hizr : IZR (up x) > 0).
-  {
-    lra.
-  }
-  apply IZR_lt in Hizr.
-  
-  rewrite INR_IZR_INZ.
-  - exact Hup.
-  - exact Hpos.
-Qed.
-*)
-Require Import Reals ZArith Lra Lia.
-Open Scope R_scope.
-
-(*lemat dot. tego że jeśli x>0 to sufit z x jest większy od 0*)
-Lemma up_nonneg :
-  forall x:R, x > 0 -> (0 <= up x)%Z.
-Proof.
-  intros x Hx.
-
-  destruct (archimed x) as [H1 _].
-  (* H1 : IZR (up x) > x *)
-
-  assert (HposR : IZR (up x) > 0).
-  {
-    lra.
-  }
-
-  (* 0 = IZR 0 *)
-  assert (H0 : IZR 0 < IZR (up x)).
-  {
-    apply Rgt_lt in HposR.
-    lra.
-  }
- 
-  apply lt_IZR  in H0.
-  (* H0 : (0 < up x)%Z *)
-
-  lia.
-Qed.
-
-(*lemat że sufit z x jest większy lub równy x*)
-(*
-Lemma up_x_ege_x:
-  forall x:R,x>0-> IZR (up x)>=x. 
- (*wczesniejsza wersja INR(Z.to_nat(up(x)))>=x.*) 
-Proof.
-  intros x Hx.
-  apply up_ub.
-Qed.
-*)
-(*
-Lemma up_ub_upgrade :
-  forall x:R, x>0 ->
-    INR (Z.to_nat (up x)) >= x.
-Proof.
-  intros x Hx.
-
-  destruct (archimed x) as [Hup _].
-
-
-  rewrite INR_IZR_INZ.
-
-  rewrite Z2Nat.id.
-  apply up_ub.
-  apply up_nonneg.
-  lra.
-  
-Qed.
-*)
-Require Import Psatz.  
-
-Require Import Reals ZArith Lia Lra.
-
-
-
-
-Lemma pow_half_small :
-  forall e:R, e > 0->
-  exists n,
-    (1/2)^n < e.
-Proof.
+  (*rozpakowuje definicje granicy oraz obliczenie wartosci ciągu*)
+  unfold lim, eval_seriesGeo. 
+  (*wprwoadzam e i założenie że e>0*)
   intros e He.
-  destruct (archimed (/e)) as [Hgt Hsmall].
-  set (m := up (/ e)).
-  exists (S( Z.to_nat m)).
-  (*przeniesienia twierdzenia n<=2^n na liczby rzeczywiste*)
-  assert (Hpow :
-    INR (S (Z.to_nat m))
-      <= INR (Nat.pow 2 (S (Z.to_nat m)))).
-  {
-    apply le_INR.
-    apply pow2GeN.
-  }
-  assert (Hm :
-  INR (S (Z.to_nat m)) > / e).
-  {
-    unfold m.
-    destruct (archimed (/e)) as [H _].
-    apply Rlt_le_trans with (r2 := IZR (up (/e))).
-    exact H.
-    apply Rge_le.
-    rewrite S_INR.
-    appl
-    lra.
-  }
-  assert (H2: 
-    INR (Nat.pow 2 (S (Z.to_nat m)))>/e ).
-   {
-    eapply Rlt_le_trans.
-    exact Hgt.
-    replace (up(/e) with m.
-    lra.
-    exact Hpow.
-   }
+  
+  (* Szukamy n0 : (1/2)^n0 < e *)
+  (* Używamy: (1/2)^n -> 0, więc istnieje takie n0 *)
+  (*pokazuje ze 0.5 jest mniejsze niż 1 by użyć twierdzenia pow_lt_1_zero*)
+    assert (Hq : Rabs 0.5 < 1).
+    { rewrite Rabs_pos_eq. (*zamienia |0.5| na 0.5*)
+     lra. 
+     lra.
+    }
+    (*wprowadzam do zalozen twierdzenie o zbieganiu do 0 ciagu typu q^n czy |q|<1*)
+    assert (H := pow_lt_1_zero 0.5 Hq e He).
+  (* pow_lt_1_zero : 0 <= q < 1 -> e > 0 -> exists n0, q^n0 < e *)
+  (*rozbijam moje nowe zalozenie na n0 i nowa zalozenie Hn0*)
+  destruct H as [n0 Hn0].
+  exists n0. (*wskazuje ze n0 istnieje*)
+  (*wprowadzamy n:nat i zalozenie ze n>=n0*)
+  intros n Hn.
+  (*usuwam 0 z wartości bezwgledenj*)
+  replace (1 * 0.5 ^ n  - 0) with (0.5 ^ n) by ring.
+  apply Hn0. (*uzywam zalozenia ktore pochodzi z twierdzenia ze to
+  |0.5^n|  jest mniejsze od e gdy n>n0
+*)
+  (*rozpakowuje założenie że n>=n0*)
+  exact Hn.
 
+Qed.
 
-
-(*Przykład ze granica 1/n to 0*)
-Require Import ZArith.
-Theorem easyGeoToZero : lim (geo 1 0.5) 0. 
-Proof.
-  unfold lim.
-  intros e He.
-  exists (Z.to_nat(up(log2 (1/e)))).
-  simpl.
 
 
