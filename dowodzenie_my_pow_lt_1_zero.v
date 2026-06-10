@@ -65,8 +65,11 @@ Proof.
     
     + (* 1/(n*h) < e, bo n > 1/(e*h) *)
       apply Rmult_lt_reg_r with (INR n * h).
-       apply Rmult_pos; [apply lt_0_INR; lia | lra].
-      - rewrite Rinv_l.
+       apply Rmult_lt_0_compat. 
+       apply lt_0_INR. 
+       admit.
+       lra.
+       rewrite Rinv_l.
       + (* cel: 1 < e * (INR n * h) ... *)
     admit.
   + apply Rmult_pos; [apply lt_0_INR; lia | lra].      
