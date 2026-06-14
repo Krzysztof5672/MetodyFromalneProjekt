@@ -21,7 +21,7 @@ podstawowe zagadnienia analizy matematycznej, konkretnie skupiając się na
 Require Import Lia.
 (*Import bibloteki odpoweidzialnej za liczby rzeczywiste*)
 Require Import Reals.
-
+Require Import Lra.
 
 (*Definicja ciągu geometrycznego jako wyraz początkowy a oraz iloraz q*)
 Inductive seriesGeo := geo (a : R) (q : R).
@@ -63,8 +63,7 @@ Definition lim (an : sequence) (g : R) :=
         Rabs (an n -g)<e. 
 
 (*definicja istnienia granicy*)
-Definition limExists (an : sequence) :=
-  exists g : R, lim an g. 
+Definition limExists (an : sequence) (g : R) := lim an g. 
 
 
 
@@ -99,7 +98,7 @@ Proof.
  Qed.
 
 Print Rabs_pos_lt.
-Require Import Lra.
+
 (*lemat dot. tego że wartość bezwglena jest wieksza od zera jesli a i b są różne*)
 Lemma diffNotZero : forall (a b : R), a<>b -> Rabs (a - b) >0.
 Proof.
